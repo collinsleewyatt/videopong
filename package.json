@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "css-loader": "^6.5.0",
+    "express": "^4.17.1",
+    "html-loader": "^3.0.0",
+    "nodemon": "^2.0.14"
+  },
+  "devDependencies": {
+    "html-webpack-plugin": "^5.5.0",
+    "mini-css-extract-plugin": "^2.4.3",
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.4.4",
+    "webpack": "^5.61.0",
+    "webpack-cli": "^4.9.1",
+    "webpack-dev-server": "^4.4.0"
+  }
+}
