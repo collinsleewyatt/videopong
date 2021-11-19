@@ -1,0 +1,2 @@
+Maybe perform a collission check every tick, and perform movement always when neccessary
+(only adding a new game frame if that tick overlaps with the next tick)?

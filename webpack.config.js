@@ -7,13 +7,17 @@ module.exports = {
 	devtool: "inline-source-map",
 	mode: "development",
 	watch: true,
-	devServer: {/*
+	devServer: {
+		static: {
+			directory: 'static',
+		},
+		/*
 		static: {
 			directory: path.join(__dirname, 'dist'),
 		},*/
 		client: {
 			logging: "verbose",
-			webSocketURL: 'ws://videopong.wcu.edu:80/ws',
+			//webSocketURL: 'ws://videopong.wcu.edu:433/ws',
 		},
 		compress: true,
 		port: 4000,
@@ -21,7 +25,7 @@ module.exports = {
 			"videopong.wcu.edu"
 		],
 		hot: true,
-		webSocketServer: 'sockjs',
+		//webSocketServer: 'sockjs',
 	},
 	watchOptions: {
 		aggregateTimeout: 300,
