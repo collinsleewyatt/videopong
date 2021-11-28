@@ -1,10 +1,10 @@
 import MovingObject from "./MovingObject";
 
 export default class Starship extends MovingObject {
-  size: number = 25;
-  angle: number = 0;
   target = {x: 0, y: 0};
   maxSpeed = 15;
+  nextShoot: number = 0;
+  size: number = 25;
   geometry = [
     { x: 0 - this.size / 2, y: 0 + this.size / 2 },
     { x: 0 + this.size / 2, y: 0 + this.size / 2 },
@@ -23,8 +23,7 @@ export default class Starship extends MovingObject {
 
   move(deltaTime:number) {
     super.move(deltaTime);
-    this.angle -= .02;
-    //this.angle = Math.atan2(this.target.y - this.y, this.target.x - this.x) + (Math.PI / 2);    
+    this.angle = Math.atan2(this.target.y - this.y, this.target.x - this.x) + (Math.PI / 2);    
   }
 
   update() {
@@ -44,7 +43,4 @@ export default class Starship extends MovingObject {
     }
   }
 
-  collision() {
-    return false;
-  }
 }

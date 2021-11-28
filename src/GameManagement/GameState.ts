@@ -63,10 +63,15 @@ export default class GameState {
       if(isKeyDown("s")) {
         star.velY += 3;
       }
+      if(this.objects.length > 2) {
+        console.log(this.objects[1].collision(this.objects[2]));
+      }
       if(isKeyDown(" ")) {
-        if(this.objects.length < 2 || true) {
+        if(star.nextShoot < Date.now()) {
+          star.nextShoot = Date.now() + 1000;
           this.objects.push(new Laser(star.x, star.y, Math.cos(star.angle - Math.PI / 2) * 40, Math.sin(star.angle - Math.PI / 2) * 40))
         }
+
       }
     star.target = mouseLocation();
     for (let object of this.objects) {
@@ -81,7 +86,7 @@ export default class GameState {
   }
   render(ctx: CanvasRenderingContext2D) {
     for (let object of this.objects) {
-      object.render(ctx);
+      object.render(ctx, this.objects.indexOf(object));
     }
   }
   equals(state: GameState) {

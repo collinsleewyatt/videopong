@@ -1,11 +1,13 @@
 {
   "dependencies": {
+    "@types/uuid": "^8.3.3",
     "css-loader": "^6.5.0",
     "express": "^4.17.1",
     "html-loader": "^3.0.0",
     "jest": "^27.3.1",
     "nodemon": "^2.0.14",
-    "phaser": "^3.55.2"
+    "phaser": "^3.55.2",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/jest": "^27.0.3",

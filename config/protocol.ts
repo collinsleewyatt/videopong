@@ -1,5 +1,5 @@
 module.exports = {
-  tickrate: 60,
+  tickrate: 30,
   timeoutAfterMs: 1000,
   roles: {
     leftPuck: 1,

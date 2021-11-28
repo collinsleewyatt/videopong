@@ -18,7 +18,6 @@ export default class Laser extends MovingObject {
 
   }
   update() {
-    this.angle -= .3*(Math.random() + .5);
   }
   /**
    * If the object is off screen and won't be interacted with.
