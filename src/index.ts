@@ -1,3 +1,4 @@
+import GameManager from "./GameManagement/GameManager";
 import GameState from "./GameManagement/GameState";
 
 require("./main.css");
@@ -30,3 +31,9 @@ function runAndPaint(time) {
 }
 
 window.requestAnimationFrame(runAndPaint);
+
+let a = new GameManager();
+for(let i = 0; i < 100; i++) {
+  a.addInput({press: "", uuid: "a", timestamp: Math.random()})
+}
+console.log(a);

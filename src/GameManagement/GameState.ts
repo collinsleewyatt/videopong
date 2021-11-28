@@ -23,7 +23,7 @@ export default class GameState {
       // run up to where we need to update.
       let moveUpToTimestamp = this.lastLogicTimestamp + movePerMs;
       this.move(this.timestamp, moveUpToTimestamp);
-      this.update();
+      this.tick();
       // changing variables to be accurate: 
       this.timestamp = moveUpToTimestamp;
       this.lastLogicTimestamp = moveUpToTimestamp;
@@ -49,7 +49,7 @@ export default class GameState {
    * this helps us be able to have a tickrate that is lower than the framerate of our device yet still have
    * the game appear smooth and synchronize.
    */
-  update() {
+  tick() {
     let star = this.objects[0] as Starship;
     if(isKeyDown("a")) {
         star.velX += -3;
