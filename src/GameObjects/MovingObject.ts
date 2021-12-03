@@ -1,6 +1,7 @@
+import { uniqueId } from "lodash";
+
 const config = require("../../config/protocol");
 const movePerMs = 1000 / config.tickrate;
-import { v4 as uuidv4 } from 'uuid';
 
 interface coordinatePair {
   x: number;
@@ -12,15 +13,19 @@ export default abstract class MovingObject {
   velX: number;
   velY: number;
   angle: number;
-  uid: string;
+  uuid: string;
   abstract geometry: coordinatePair[];
   abstract strokeStyle: string;
   abstract fillStyle: string;
 
-  private randomUUID() {
-    return uuidv4();
+  constructor(uuid?: string) {
+    if(uuid !== undefined) {
+      this.uuid = uuid;
+    }else {
+      this.uuid = uniqueId();
+    }
   }
-  
+
   getCurrentPoints(): coordinatePair[] {
     const translateAndRotate = (
       x: number,
@@ -75,6 +80,7 @@ export default abstract class MovingObject {
   }
 
   abstract update(): void;
+  abstract shouldBeRemoved(): boolean;
 
   collision(other: MovingObject): boolean {
     const getLines = (pts: coordinatePair[]):coordinatePair[][] => {

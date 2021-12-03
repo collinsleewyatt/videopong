@@ -23,7 +23,7 @@ export default class Laser extends MovingObject {
    * If the object is off screen and won't be interacted with.
    * @returns boolean relating if the object
    */
-  isOutOfPlay():boolean {
+  shouldBeRemoved():boolean {
     return (
       (this.x < 0 && this.velX < 0) ||
       (this.x > 800 && this.velX >= 0) ||

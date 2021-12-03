@@ -13,27 +13,20 @@ let centerY = 300;
 let velX = 0;
 let velY = 0;
 
-let state = new GameState(0);
-
-game.onmousemove = (ev: MouseEvent) => {
-  //star.target = {x: ev.offsetX, y: ev.offsetY}
-};
+let manager = new GameManager();
 
 let previousTime = 0;
+let startingTime = -1;
 function runAndPaint(time) {
+  if(startingTime == -1) {
+    startingTime = time;
+  }
+  time = time - startingTime;
   document.getElementById("info").innerHTML = "" + (time - previousTime);
   previousTime = time;
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, 800, 600);
-  state.simulate(time);
-  state.render(ctx);
+  manager.getStateAt(time).render(ctx);
   window.requestAnimationFrame(runAndPaint);
 }
-
 window.requestAnimationFrame(runAndPaint);
-
-let a = new GameManager();
-for(let i = 0; i < 100; i++) {
-  a.addInput({press: "", uuid: "a", timestamp: Math.random()})
-}
-console.log(a);

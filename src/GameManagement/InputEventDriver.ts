@@ -1,4 +1,3 @@
-
 let currentKeys = {};
 let currentMouseLocation = {x: 0, y: 0};
 

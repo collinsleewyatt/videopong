@@ -1,6 +1,7 @@
 module.exports = {
   tickrate: 30,
   timeoutAfterMs: 1000,
+  stateSaveEveryMs: 50,
   roles: {
     leftPuck: 1,
     rightPuck: 1,

@@ -13,8 +13,8 @@ export default class Starship extends MovingObject {
   fillStyle = "white";
   strokeStyle = "white";
   // center = {x: this.size / 2, y: this.size / 2};
-  constructor(x: number, y: number) {
-    super();
+  constructor(uuid: string, x: number, y: number) {
+    super(uuid);
     this.x = x;
     this.y = y;
     this.velX = 0;
@@ -41,6 +41,10 @@ export default class Starship extends MovingObject {
     if (this.velY > -0.2 && this.velY < 0.2) {
       this.velY = 0;
     }
+  }
+
+  shouldBeRemoved() {
+    return false;
   }
 
 }

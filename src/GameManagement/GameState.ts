@@ -1,46 +1,56 @@
-import Laser from "../GameObjects/Laser";
+import { cloneDeep } from "lodash";
 import MovingObject from "../GameObjects/MovingObject";
 import Starship from "../GameObjects/Starship";
-import { isKeyDown, mouseLocation } from "./InputEventDriver";
+import { Input } from "./GameManager";
 
 const config = require("../../config/protocol");
 const movePerMs = 1000 / config.tickrate;
 
 export default class GameState {
-  objects: MovingObject[];
-  // the last time the 
-  lastLogicTimestamp: number;
-  timestamp: number;
-  constructor(timestamp) {
-    this.timestamp = timestamp;
-    this.lastLogicTimestamp = timestamp;
-    this.objects = [new Starship(0, 0), new Starship(500, 400)];
+  objects: MovingObject[] = [];
+  currentTick: number;
+
+  constructor(currentTick) {
+    this.currentTick = currentTick;
   }
 
-  simulate(toTimestamp: number) {
-    // if we are reaching to a point in the future where we will need to do a full update function:
-    while(toTimestamp - this.lastLogicTimestamp > movePerMs) {
-      // run up to where we need to update.
-      let moveUpToTimestamp = this.lastLogicTimestamp + movePerMs;
-      this.move(this.timestamp, moveUpToTimestamp);
-      this.tick();
-      // changing variables to be accurate: 
-      this.timestamp = moveUpToTimestamp;
-      this.lastLogicTimestamp = moveUpToTimestamp;
-    }
-    if(this.timestamp < toTimestamp) {
-      this.move(this.timestamp, toTimestamp);
-      this.timestamp = toTimestamp;
+  addInputs(inputs: Input[]) {
+    for(let input of inputs) {
+      if(input.type == "addCharacter") {
+        let data = input.data;
+        this.objects.push(new Starship(input.data.uuid, input.data.x, input.data.y));
+      }
+      this.objects.at(0).velX += 1; 
     }
   }
 
-  /**
-   * 
-   */
-  move(previousTimestamp: number, toTimestamp: number) {
+  tick() {
     for(let object of this.objects) {
-      object.move(toTimestamp - previousTimestamp);
+      object.move(movePerMs);
+      object.update();
+      if(object.shouldBeRemoved()) {
+        this.objects.splice(this.objects.indexOf(object), 1);
+      }
     }
+    this.currentTick += 1;
+  }
+  /**
+   * Returns a new, copied, special state,
+   * guessing where the objects will be at a specific point in time between ticks.
+   * Does not perform collision checks and does not mutate state.
+   * This function specifically is only for allowing smooth redraws 
+   * to allow framerate not to be tied to tickrate. Don't use for updating the game. 
+   * @param deltaTimeMs 
+   * @returns 
+   */
+  speculativePartialTick(deltaTimeMs: number): GameState {
+    console.time("speculativePartialTick")
+    let speculativeState = cloneDeep(this);
+    for(let object of speculativeState.objects) {
+      object.move(deltaTimeMs);
+    }
+    console.timeEnd("speculativePartialTick")
+    return speculativeState;
   }
 
   /**
@@ -49,23 +59,8 @@ export default class GameState {
    * this helps us be able to have a tickrate that is lower than the framerate of our device yet still have
    * the game appear smooth and synchronize.
    */
-  tick() {
+  /*tick() {
     let star = this.objects[0] as Starship;
-    if(isKeyDown("a")) {
-        star.velX += -3;
-      }
-      if(isKeyDown("d")) {
-        star.velX += 3;
-      }
-      if(isKeyDown("w")) {
-        star.velY += -3;
-      }
-      if(isKeyDown("s")) {
-        star.velY += 3;
-      }
-      if(this.objects.length > 2) {
-        console.log(this.objects[1].collision(this.objects[2]));
-      }
       if(isKeyDown(" ")) {
         if(star.nextShoot < Date.now()) {
           star.nextShoot = Date.now() + 1000;
@@ -83,11 +78,14 @@ export default class GameState {
       }
       object.update();
     }
-  }
+  }*/
   render(ctx: CanvasRenderingContext2D) {
+    console.time("render");
+    console.log("I AM RENDER")
     for (let object of this.objects) {
       object.render(ctx, this.objects.indexOf(object));
     }
+    console.timeEnd("render")
   }
   equals(state: GameState) {
     return false;
