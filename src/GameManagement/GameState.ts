@@ -16,11 +16,23 @@ export default class GameState {
 
   addInputs(inputs: Input[]) {
     for(let input of inputs) {
+      console.log(this.objects.map(obj => {
+        return obj.uuid;
+      }))
       if(input.type == "addCharacter") {
         let data = input.data;
-        this.objects.push(new Starship(input.data.uuid, input.data.x, input.data.y));
+        this.objects.push(new Starship(data.uuid, data.location.x, data.location.y));
       }
-      this.objects.at(0).velX += 1; 
+      if(input.type == "changeTarget") {
+        let data = input.data;
+        let obj = this.objects.find((obj) => {return obj.uuid == data.uuid});
+        if(obj instanceof Starship) {
+          obj.velX += data.location.x;
+          obj.velY += data.location.y;
+        }else {
+          console.log(obj);
+        }
+      }
     }
   }
 
@@ -44,12 +56,10 @@ export default class GameState {
    * @returns 
    */
   speculativePartialTick(deltaTimeMs: number): GameState {
-    console.time("speculativePartialTick")
     let speculativeState = cloneDeep(this);
     for(let object of speculativeState.objects) {
       object.move(deltaTimeMs);
     }
-    console.timeEnd("speculativePartialTick")
     return speculativeState;
   }
 
@@ -80,12 +90,9 @@ export default class GameState {
     }
   }*/
   render(ctx: CanvasRenderingContext2D) {
-    console.time("render");
-    console.log("I AM RENDER")
     for (let object of this.objects) {
       object.render(ctx, this.objects.indexOf(object));
     }
-    console.timeEnd("render")
   }
   equals(state: GameState) {
     return false;

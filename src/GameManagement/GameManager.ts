@@ -1,4 +1,5 @@
-import { cloneDeep, uniqueId } from "lodash";
+import { cloneDeep } from "lodash";
+import {v4 as uniqueId} from "uuid";
 import GameState from "./GameState";
 import { isKeyDown } from "./InputEventDriver";
 const config = require("../../config/protocol");
@@ -30,8 +31,6 @@ export default class GameManager {
    * @param timestamp
    */
   private updateToTick(toTick: number) {
-    console.log(this.states.at(-1).objects.length);
-    console.time("updateToTick");
     if (this.states.length == 0) {
       throw new Error("No state to update from?");
     }
@@ -53,11 +52,9 @@ export default class GameManager {
       }
       this.states.push(newState);
     }
-    console.timeEnd("updateToTick");
   }
 
   private rollback(baseTick: number, endingTick: number) {
-    console.time("rollback");
     // first, deleting states:
     // deletionIndex is the first state we need to delete according to baseTick.
     // we will delete all ticks after baseTick, but not the tick at baseTick.
@@ -68,8 +65,6 @@ export default class GameManager {
     this.states.splice(deletionIndex, this.states.length - deletionIndex);
     // now, updating the state to runTo:
     this.updateToTick(endingTick);
-    console.timeEnd("rollback");
-
   }
 
   getAllInputsFromTick(tick: number): Input[] {
@@ -118,8 +113,6 @@ export default class GameManager {
    * @param timestamp
    */
   getStateAt(timestamp: number) {
-    console.time("getstateat");
-
     /**
      * This function will create new states based on ticks right before if neccesary,
      * then will speculatively execute the state based on a certain number of milliseconds after
@@ -136,8 +129,22 @@ export default class GameManager {
         data: {
           uuid: uniqueId(),
           location: {
-            x: Math.random() * 100,
-            y: Math.random() * 100
+            x: Math.random() * 400,
+            y: Math.random() * 400
+          }
+        },
+        index: this.inputs.length
+      })
+    }
+    if(isKeyDown("d")) {
+      this.addInput({
+        onTick: toTick,
+        type: "changeTarget",
+        data: {
+          uuid: "3",
+          location: {
+            x: 1.3,
+            y: 1.3
           }
         },
         index: this.inputs.length
@@ -148,7 +155,6 @@ export default class GameManager {
     // updating to the latest tick that we want.
     this.updateToTick(toTick);
     // smoothing things out, giving a speculative tick so objects move smoothly:
-    console.timeEnd("getstateat");
     return this.states.at(-1).speculativePartialTick(deltaTime);
   }
 

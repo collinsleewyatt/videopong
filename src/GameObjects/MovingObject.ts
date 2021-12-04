@@ -71,9 +71,9 @@ export default abstract class MovingObject {
         ctx.stroke();
       }
     }
-    ctx.font = "30px Arial";
+    ctx.font = "20px Arial";
     ctx.fillStyle = "red";
-    ctx.fillText(index, this.x, this.y, 300);
+    //ctx.fillText(index, this.x, this.y, 300);
     // resetting the line width:
     ctx.lineWidth = oldLineWidth;
 
