@@ -1,5 +1,10 @@
+import { uniqueId } from "lodash";
 import GameManager from "./GameManagement/GameManager";
-import GameState from "./GameManagement/GameState";
+import {
+  registerKeyPressEventListener,
+  registerMouseMoveEventListener,
+} from "./GameManagement/InputEventDriver";
+import Starship from "./GameObjects/Starship";
 
 require("./main.css");
 
@@ -18,7 +23,7 @@ let manager = new GameManager();
 let previousTime = 0;
 let startingTime = -1;
 function runAndPaint(time) {
-  if(startingTime == -1) {
+  if (startingTime == -1) {
     startingTime = time;
   }
   time = time - startingTime;
@@ -30,3 +35,107 @@ function runAndPaint(time) {
   window.requestAnimationFrame(runAndPaint);
 }
 window.requestAnimationFrame(runAndPaint);
+
+registerKeyPressEventListener((keyPress) => {
+  switch (keyPress.key) {
+    case "p":
+      manager.addInput({
+        data: { uuid: uniqueId(), location: { x: 0, y: 0 } },
+        index: manager.inputs.length,
+        onTick: manager.states.at(-1).currentTick,
+        type: "addCharacter",
+      });
+      break;
+    case "w":
+      manager.addInput({
+        data: {
+          uuid: manager.states.at(-1).objects.at(0).uuid,
+          type: keyPress.type,
+          y: "-",
+        },
+        index: manager.inputs.length,
+        onTick: manager.states.at(-1).currentTick,
+        type: "changeDirection",
+      });
+      break;
+    case "a":
+      manager.addInput({
+        data: {
+          uuid: manager.states.at(-1).objects.at(0).uuid,
+          type: keyPress.type,
+          x: "-",
+        },
+        index: manager.inputs.length,
+        onTick: manager.states.at(-1).currentTick,
+        type: "changeDirection",
+      });
+      break;
+    case "s":
+      manager.addInput({
+        data: {
+          uuid: manager.states.at(-1).objects.at(0).uuid,
+          type: keyPress.type,
+          y: "+",
+        },
+        index: manager.inputs.length,
+        onTick: manager.states.at(-1).currentTick,
+        type: "changeDirection",
+      });
+      break;
+    case "d":
+      manager.addInput({
+        data: {
+          uuid: manager.states.at(-1).objects.at(0).uuid,
+          type: keyPress.type,
+          x: "+",
+        },
+        index: manager.inputs.length,
+        onTick: manager.states.at(-1).currentTick,
+        type: "changeDirection",
+      });
+      break;
+    case " ":
+      if (keyPress.type == "on") {
+        manager.addInput({
+          data: {
+            uuid: manager.states.at(-1).objects.at(0).uuid,
+          },
+          index: manager.inputs.length,
+          onTick: manager.states.at(-1).currentTick,
+          type: "chargeProjectile",
+        });
+      }
+      if (keyPress.type == "off") {
+        manager.addInput({
+          data: {
+            uuid: manager.states.at(-1).objects.at(0).uuid,
+            angle: manager.states.at(-1).objects.at(0).angle,
+          },
+          index: manager.inputs.length,
+          onTick: manager.states.at(-1).currentTick,
+          type: "shootProjectile",
+        });
+      }
+      break;
+  }
+});
+
+registerMouseMoveEventListener((mouseEvent) => {
+  let factor = 4;
+  let nx = Math.floor(mouseEvent.x / factor) * factor;
+  let ny = Math.floor(mouseEvent.y / factor) * factor;
+  let { x, y } = (manager.states.at(-1).objects.at(0) as Starship).target;
+  if (x == nx && y == ny) {
+    return;
+  } else {
+    manager.addInput({
+      data: {
+        uuid: manager.states.at(-1).objects.at(0).uuid,
+        location: { x: nx, y: ny },
+      },
+      index: manager.inputs.length,
+      onTick: manager.states.at(-1).currentTick,
+      type: "changeTarget",
+    });
+  }
+});

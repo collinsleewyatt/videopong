@@ -67,7 +67,7 @@ export default class GameManager {
     this.updateToTick(endingTick);
   }
 
-  getAllInputsFromTick(tick: number): Input[] {
+  private getAllInputsFromTick(tick: number): Input[] {
     // TODO this won't affect performance this much but I should change it to something not in O(n).
     return this.inputs.filter((input) => {
       return input.onTick == tick;
@@ -122,7 +122,7 @@ export default class GameManager {
      * So I can have a tickrate of 30tps, and still have smooth moving objects.
      */
     let toTick = Math.floor(timestamp / config.tickrate);
-    if(isKeyDown("w")) {
+    if(false && isKeyDown("w")) {
       this.addInput({
         onTick: toTick,
         type: "addCharacter",
@@ -136,20 +136,6 @@ export default class GameManager {
         index: this.inputs.length
       })
     }
-    if(isKeyDown("d")) {
-      this.addInput({
-        onTick: toTick,
-        type: "changeTarget",
-        data: {
-          uuid: "3",
-          location: {
-            x: 1.3,
-            y: 1.3
-          }
-        },
-        index: this.inputs.length
-      })
-    }
     // represents how many ms are between the last tick we update to and the time we requested.
     let deltaTime = timestamp - (toTick * config.tickrate);
     // updating to the latest tick that we want.
@@ -157,7 +143,5 @@ export default class GameManager {
     // smoothing things out, giving a speculative tick so objects move smoothly:
     return this.states.at(-1).speculativePartialTick(deltaTime);
   }
-
-  removeAllStatesBefore(timestamp: number) {}
 
 }
