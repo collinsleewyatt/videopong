@@ -1,8 +1,5 @@
 import { uniqueId } from "lodash";
 
-const config = require("../../config/protocol");
-const movePerMs = 1000 / config.tickrate;
-
 interface coordinatePair {
   x: number;
   y: number;
@@ -77,7 +74,7 @@ export default abstract class MovingObject {
 
     ctx.font = "20px Arial";
     ctx.fillStyle = "red";
-    //ctx.fillText(index, this.x, this.y, 300);
+    ctx.fillText(this.uuid, this.x, this.y, 300);
     // resetting the line width:
     ctx.lineWidth = oldLineWidth;
   }

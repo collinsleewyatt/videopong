@@ -20,8 +20,6 @@ export default class Ball extends MovingObject {
         this.velY += 10
     }
     update(): void {
-        console.log(this.velX, this.velY)
-
         if(this.frozenFor > 0) {
             this.frozenFor -= 1;
             return;
@@ -59,10 +57,12 @@ export default class Ball extends MovingObject {
 
     collided(other: MovingObject) {
         if(other instanceof Laser) {
-            this.velX += Math.pow(other.velX, 1.2);
-            this.velY += Math.pow(other.velY, 1.2);
+            // javascript cannot do exponents of negative numbers so we have this as a workaround.
+            let signX = Math.sign(other.velX);
+            let signY = Math.sign(other.velY);
+            this.velX += signX * Math.pow(Math.abs(other.velX), 1.2);
+            this.velY += signY * Math.pow(Math.abs(other.velY), 1.2);
             this.frozenFor = other.intensity * 20 - 12;
-            console.log(this.frozenFor)
         }
         
     }

@@ -2,14 +2,16 @@
   "dependencies": {
     "@types/lodash": "^4.14.177",
     "@types/uuid": "^8.3.3",
+    "concurrently": "^6.4.0",
     "css-loader": "^6.5.0",
     "express": "^4.17.1",
     "html-loader": "^3.0.0",
     "jest": "^27.3.1",
     "lodash": "^4.17.21",
-    "nodemon": "^2.0.14",
+    "nodemon": "^2.0.15",
     "ts-jest": "^27.0.7",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "ws": "^8.3.0"
   },
   "jest": {
     "transform": {
@@ -28,6 +30,7 @@
     "webpack-dev-server": "^4.4.0"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "dev": "concurrently \"nodemon index.js\" \"npx webpack serve\""
   }
 }

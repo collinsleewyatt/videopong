@@ -18,7 +18,7 @@ export interface KeyPressListener {
 }
 
 export interface MouseMoveEventListener {
-  (mouseMoveEvent: MouseMoveEvent): void;
+  (mouseMoveEvent: MouseMoveEvent, previousMouseMoveEvent?: MouseMoveEvent): void;
 }
 
 window.onkeydown = (e: KeyboardEvent) => {
@@ -49,14 +49,16 @@ window.onkeyup = (e: KeyboardEvent) => {
     }
 };
 
+let previousLoc = undefined;
 window.onmousemove = (e: MouseEvent) => {
   let loc = { x: e.x, y: e.y };
   if (currentMouseLocation != loc) {
     currentMouseLocation = loc;
     for (let listener of mouseListeners) {
-      listener(loc);
+      listener(loc, previousLoc);
     }
   }
+  previousLoc = loc;
 };
 
 export function isKeyDown(key: string) {
@@ -73,4 +75,9 @@ export function registerKeyPressEventListener(func: KeyPressListener) {
 
 export function registerMouseMoveEventListener(func: MouseMoveEventListener) {
   mouseListeners.push(func);
+}
+
+export function clearListeners() {
+  keyPressListeners = [];
+  mouseListeners = [];
 }

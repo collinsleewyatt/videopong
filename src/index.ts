@@ -1,141 +1,195 @@
 import { uniqueId } from "lodash";
-import GameManager from "./GameManagement/GameManager";
+import GameManager from "./GameManagement/StateManager";
 import {
+  clearListeners,
   registerKeyPressEventListener,
   registerMouseMoveEventListener,
 } from "./GameManagement/InputEventDriver";
-import Starship from "./GameObjects/Starship";
+import Time from "./Time";
+import { PongState } from "./PongGame/State/PongState";
 
 require("./main.css");
 
-let game: HTMLCanvasElement = document.getElementById(
-  "game"
-) as HTMLCanvasElement;
-let ctx: CanvasRenderingContext2D = game.getContext("2d");
-let angle = 0;
-let centerX = 600;
-let centerY = 300;
-let velX = 0;
-let velY = 0;
 
-let manager = new GameManager();
-
-let previousTime = 0;
 let startingTime = -1;
-function runAndPaint(time) {
-  if (startingTime == -1) {
-    startingTime = time;
-  }
-  time = time - startingTime;
-  document.getElementById("info").innerHTML = "" + (time - previousTime);
-  previousTime = time;
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, 800, 600);
-  manager.getStateAt(time).render(ctx);
-  window.requestAnimationFrame(runAndPaint);
+let currentTime = 0;
+
+let connection = new WebSocket("ws://localhost:7080")
+let gameRun = false;
+connection.onopen = () => {
+  console.log("connected")
 }
-window.requestAnimationFrame(runAndPaint);
+connection.onerror = (e) => {
+  console.log(e);
+  console.log("error !")
+}
+connection.onclose = (e) => {
+  gameDie();
+  console.log(e);
+  console.log("closed :o")
+}
 
-registerKeyPressEventListener((keyPress) => {
-  switch (keyPress.key) {
-    case "p":
-      manager.addInput({
-        data: { uuid: uniqueId(), location: { x: 0, y: 0 } },
-        index: manager.inputs.length,
-        onTick: manager.states.at(-1).currentTick,
-        type: "addCharacter",
-      });
-      break;
-    case "w":
-      manager.addInput({
-        data: {
-          uuid: manager.states.at(-1).objects.at(0).uuid,
-          type: keyPress.type,
-          y: "-",
-        },
-        index: manager.inputs.length,
-        onTick: manager.states.at(-1).currentTick,
-        type: "changeDirection",
-      });
-      break;
-    case "a":
-      manager.addInput({
-        data: {
-          uuid: manager.states.at(-1).objects.at(0).uuid,
-          type: keyPress.type,
-          x: "-",
-        },
-        index: manager.inputs.length,
-        onTick: manager.states.at(-1).currentTick,
-        type: "changeDirection",
-      });
-      break;
-    case "s":
-      manager.addInput({
-        data: {
-          uuid: manager.states.at(-1).objects.at(0).uuid,
-          type: keyPress.type,
-          y: "+",
-        },
-        index: manager.inputs.length,
-        onTick: manager.states.at(-1).currentTick,
-        type: "changeDirection",
-      });
-      break;
-    case "d":
-      manager.addInput({
-        data: {
-          uuid: manager.states.at(-1).objects.at(0).uuid,
-          type: keyPress.type,
-          x: "+",
-        },
-        index: manager.inputs.length,
-        onTick: manager.states.at(-1).currentTick,
-        type: "changeDirection",
-      });
-      break;
-    case " ":
-      if (keyPress.type == "on") {
-        manager.addInput({
+let manager = new GameManager(new PongState(0));
+let time = new Time(Date.now());
+
+connection.onmessage = (msg) => {
+  console.log(msg)
+  let data = JSON.parse(msg.data);
+  if(data.type == "start") {
+    time.startTimer(parseInt(data.data));
+    gameStart();
+  }
+  if(data.type == "setuuid") {
+    uuid = data.data;
+  }
+  if(data.type == "currentTimestamp") {
+    time.synchronize(data.data);
+  }
+  if(data.type == "input") {
+    console.log("recieved input...")
+    manager.addInput(data.data);
+  }
+}
+let uuid = null;
+let gameStart = () => {
+  gameRun = true;
+  let game: HTMLCanvasElement = document.getElementById(
+    "game"
+  ) as HTMLCanvasElement;
+  let ctx: CanvasRenderingContext2D = game.getContext("2d");
+  function runAndPaint() {
+    if(!gameRun) {
+      return;
+    }
+    document.getElementById("info").innerHTML = "" + `${time.getTimerValue()}`
+    manager.getStateAt(time.getTimerValue()).render(ctx);
+
+    window.requestAnimationFrame(runAndPaint);
+  }
+  window.requestAnimationFrame(runAndPaint);
+  
+  function addInput(data: any) {
+    manager.addInput(data);
+    connection.send(JSON.stringify({type: "input", data: JSON.stringify(data)}));
+  }
+
+  registerKeyPressEventListener((keyPress) => {
+    if(uuid == null) {
+      return;
+    }
+    switch (keyPress.key) {
+      case "p":
+        addInput({
+          data: { uuid: uniqueId(), location: { x: 0, y: 0 } },
+          index: manager.inputs.length,
+          onTick: manager.states.at(-1).currentTick,
+          type: "addCharacter",
+        })
+        break;
+      case "w":
+        addInput({
           data: {
-            uuid: manager.states.at(-1).objects.at(0).uuid,
+            uuid: uuid,
+            type: keyPress.type,
+            y: "-",
           },
           index: manager.inputs.length,
           onTick: manager.states.at(-1).currentTick,
-          type: "chargeProjectile",
+          type: "changeDirection",
         });
-      }
-      if (keyPress.type == "off") {
-        manager.addInput({
+        break;
+      case "a":
+        addInput({
           data: {
-            uuid: manager.states.at(-1).objects.at(0).uuid,
-            angle: manager.states.at(-1).objects.at(0).angle,
+            uuid: uuid,
+            type: keyPress.type,
+            x: "-",
           },
           index: manager.inputs.length,
           onTick: manager.states.at(-1).currentTick,
-          type: "shootProjectile",
+          type: "changeDirection",
         });
-      }
-      break;
-  }
-});
+        break;
+      case "s":
+        addInput({
+          data: {
+            uuid: uuid,
+            type: keyPress.type,
+            y: "+",
+          },
+          index: manager.inputs.length,
+          onTick: manager.states.at(-1).currentTick,
+          type: "changeDirection",
+        });
+        break;
+      case "d":
+        addInput({
+          data: {
+            uuid: uuid,
+            type: keyPress.type,
+            x: "+",
+          },
+          index: manager.inputs.length,
+          onTick: manager.states.at(-1).currentTick,
+          type: "changeDirection",
+        });
+        break;
+      case "g":
+        console.log()
+        console.log(manager.inputs);
+        break;
+      case " ":
+        if (keyPress.type == "on") {
+          addInput({
+            data: {
+              uuid: uuid,
+            },
+            index: manager.inputs.length,
+            onTick: manager.states.at(-1).currentTick,
+            type: "chargeProjectile",
+          });
+        }
+        if (keyPress.type == "off") {
+          addInput({
+            data: {
+              uuid: uuid,
+            },
+            index: manager.inputs.length,
+            onTick: manager.states.at(-1).currentTick,
+            type: "shootProjectile",
+          });
+        }
+        break;
+    }
+  });
+  
+  registerMouseMoveEventListener((mouseEvent, previousMouseMoveEvent) => {
+    if(uuid == null) {
+      return;
+    }
+    let factor = 4;
+    let nx = Math.floor(mouseEvent.x / factor) * factor;
+    let ny = Math.floor(mouseEvent.y / factor) * factor;
+    let { x, y } = previousMouseMoveEvent;
+    if (x == nx && y == ny) {
+      return;
+    } else {
+      addInput({
+        data: {
+          uuid: uuid,
+          location: { x: nx, y: ny },
+        },
+        index: manager.inputs.length,
+        onTick: manager.states.at(-1).currentTick,
+        type: "changeTarget",
+      });
+    }
+  });
+  return manager;
+}
 
-registerMouseMoveEventListener((mouseEvent) => {
-  let factor = 4;
-  let nx = Math.floor(mouseEvent.x / factor) * factor;
-  let ny = Math.floor(mouseEvent.y / factor) * factor;
-  let { x, y } = (manager.states.at(-1).objects.at(0) as Starship).target;
-  if (x == nx && y == ny) {
-    return;
-  } else {
-    manager.addInput({
-      data: {
-        uuid: manager.states.at(-1).objects.at(0).uuid,
-        location: { x: nx, y: ny },
-      },
-      index: manager.inputs.length,
-      onTick: manager.states.at(-1).currentTick,
-      type: "changeTarget",
-    });
-  }
-});
+function gameDie() {
+  gameRun = false;
+  clearListeners();
+  console.log("die")
+}

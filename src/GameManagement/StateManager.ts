@@ -1,7 +1,6 @@
-import { cloneDeep } from "lodash";
-import {v4 as uniqueId} from "uuid";
+import { cloneDeep, initial } from "lodash";
+import { PongState } from "../PongGame/State/PongState";
 import GameState from "./GameState";
-import { isKeyDown } from "./InputEventDriver";
 const config = require("../../config/protocol");
 export interface Input {
   data: any;
@@ -22,8 +21,8 @@ export interface Input {
 export default class GameManager {
   states: GameState[] = [];
   inputs: Input[] = [];
-  constructor() {
-    this.states.push(new GameState(0));
+  constructor(initialState: GameState) {
+    this.states.push(initialState);
   }
 
   /**
@@ -53,13 +52,21 @@ export default class GameManager {
       this.states.push(newState);
     }
   }
-
+  private garbageCollect(beforeTick: number) {
+    while(this.states[0].currentTick < beforeTick) {
+      this.states.shift();
+    }
+  }
   private rollback(baseTick: number, endingTick: number) {
+    // if this input happens in the future, we don't need to rollback:
+    if(this.states.at(-1).currentTick < baseTick) {
+      return;
+    }
     // first, deleting states:
     // deletionIndex is the first state we need to delete according to baseTick.
     // we will delete all ticks after baseTick, but not the tick at baseTick.
     let deletionIndex = this.states.findIndex((item: GameState) => {
-      return item.currentTick > baseTick;
+      return item.currentTick >= baseTick;
     });
     // deleting all states after that index.
     this.states.splice(deletionIndex, this.states.length - deletionIndex);
@@ -89,24 +96,16 @@ export default class GameManager {
     // so we don't need to rollback if we don't change anything.
     // but, in the case that we're not in the right spot and the authoritative server corrects us with a new input, then we need to
     // change our guess and roll back.
-    if (this.inputs[input.index] != input) {
-      this.inputs[input.index] = input;
-      this.rollback(input.onTick, this.states.at(-1).currentTick)
+    if(typeof input == "string") {
+      input = JSON.parse(input)
     }
-
-    // commenting this out because I'm using a new system.
-    /*
-    let index = this.inputs.findIndex((element: Input) => {
-      return element.timestamp > input.timestamp;
-    });
-    // pushing onto the end of the array if find returns a -1.
-    // This is neccesary to prevent things from getting out of order at case 1 or case 2 (1 or 2 elements in the arr.)
-    if (index === -1) {
-      this.inputs.push(input);
-    } else {
-      // placing an element in right after 'index'.
-      this.inputs.splice(index, 0, input);
-    }*/
+    if (this.inputs[input.index] != input) {
+      if(input.onTick <= 0) {
+        return;
+      }
+      this.inputs[input.index] = input;
+      this.rollback(input.onTick, this.states.at(-1).currentTick);
+    }
   }
 
   /**
@@ -122,24 +121,11 @@ export default class GameManager {
      * So I can have a tickrate of 30tps, and still have smooth moving objects.
      */
     let toTick = Math.floor(timestamp / config.tickrate);
-    if(false && isKeyDown("w")) {
-      this.addInput({
-        onTick: toTick,
-        type: "addCharacter",
-        data: {
-          uuid: uniqueId(),
-          location: {
-            x: Math.random() * 400,
-            y: Math.random() * 400
-          }
-        },
-        index: this.inputs.length
-      })
-    }
     // represents how many ms are between the last tick we update to and the time we requested.
     let deltaTime = timestamp - (toTick * config.tickrate);
     // updating to the latest tick that we want.
     this.updateToTick(toTick);
+    //this.garbageCollect(toTick - 300);
     // smoothing things out, giving a speculative tick so objects move smoothly:
     return this.states.at(-1).speculativePartialTick(deltaTime);
   }
