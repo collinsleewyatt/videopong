@@ -1,16 +1,8 @@
-import { cloneDeep, initial } from "lodash";
-import { PongState } from "../PongGame/State/PongState";
+import { cloneDeep } from "lodash";
 import GameState from "./GameState";
-const config = require("../../config/protocol");
-export interface Input {
-  data: any;
-  index: number; // the index of the current input. Ensures that the list can be ordered in a consistent way
-  // so if two inputs come at the same time, we are able to order them to prevent a desynchronization.
-  onTick: number; // the tick that input occured on.
-  type: string;
-}
+import { Input } from "./Input";
+
 /**
- * Fuck you.
  * rollback - deletes states after, then runs to a specific time.
  * update - updates to a time in history.
  * getStateIndexBefore
@@ -19,8 +11,8 @@ export interface Input {
  * // this will update the state to the nearest tick, then speculatively return a copy of state at that particular millisecond.
  */
 export default class GameManager {
-  states: GameState[] = [];
-  inputs: Input[] = [];
+  private states: GameState[] = [];
+  private inputs: Input[] = [];
   constructor(initialState: GameState) {
     this.states.push(initialState);
   }
@@ -38,14 +30,14 @@ export default class GameManager {
       let newState;
       // if the tick is not divisible by ten, assign by reference, otherwise, copy.
       // prevents too much cloning.
-      if(this.states.at(-1).currentTick % 10 != 0) {
+      if (this.states.at(-1).currentTick % 10 != 0) {
         newState = this.states.at(-1);
         // get rid of it, then we'll update it and put it back on.
         this.states.pop();
-      }else {
+      } else {
         newState = cloneDeep(this.states.at(-1));
       }
-      while(newState.currentTick != toTick) {
+      while (newState.currentTick != toTick) {
         newState.tick();
         newState.addInputs(this.getAllInputsFromTick(newState.currentTick));
       }
@@ -53,13 +45,13 @@ export default class GameManager {
     }
   }
   private garbageCollect(beforeTick: number) {
-    while(this.states[0].currentTick < beforeTick) {
+    while (this.states[0].currentTick < beforeTick) {
       this.states.shift();
     }
   }
   private rollback(baseTick: number, endingTick: number) {
     // if this input happens in the future, we don't need to rollback:
-    if(this.states.at(-1).currentTick < baseTick) {
+    if (this.states.at(-1).currentTick < baseTick) {
       return;
     }
     // first, deleting states:
@@ -81,10 +73,15 @@ export default class GameManager {
     });
   }
 
+  public getMostRecentTick(): number {
+    return this.states.at(-1).currentTick;
+  }
+
   /**
    * Adds an input to the current input total, and rolls back the state if neccesary.
+   * @param input, the complete input to add.
    */
-  addInput(input: Input) {
+  public addInput(input: Input) {
     // this if statement prevents rolling back if the input array wouldn't be changed by
     // this new input, eg. if the inputs are the same.
     // this scenario is possible: whenever the client sends an input to the server, it stores
@@ -96,12 +93,14 @@ export default class GameManager {
     // so we don't need to rollback if we don't change anything.
     // but, in the case that we're not in the right spot and the authoritative server corrects us with a new input, then we need to
     // change our guess and roll back.
-    if(typeof input == "string") {
-      input = JSON.parse(input)
-    }
     if (this.inputs[input.index] != input) {
-      if(input.onTick <= 0) {
+      if (input.onTick <= 0) {
         return;
+      }
+      if(input.index == undefined) {
+        // adding the index back in, it's an optional parameter because
+        // we use the input interface to send button presses to the server.
+        input.index = this.inputs.length;
       }
       this.inputs[input.index] = input;
       this.rollback(input.onTick, this.states.at(-1).currentTick);
@@ -109,9 +108,10 @@ export default class GameManager {
   }
 
   /**
-   * @param timestamp
+   * @param timestamp, in milliseconds.
+   * @returns a new GameState object at that point in time.
    */
-  getStateAt(timestamp: number) {
+  getStateAt(timestamp: number): GameState {
     /**
      * This function will create new states based on ticks right before if neccesary,
      * then will speculatively execute the state based on a certain number of milliseconds after
@@ -120,14 +120,13 @@ export default class GameManager {
      * This implementation allows us to have our game tickrate be seperate from our framerate.
      * So I can have a tickrate of 30tps, and still have smooth moving objects.
      */
-    let toTick = Math.floor(timestamp / config.tickrate);
+    let toTick = Math.floor(timestamp / 30);
     // represents how many ms are between the last tick we update to and the time we requested.
-    let deltaTime = timestamp - (toTick * config.tickrate);
+    let deltaTime = timestamp - toTick * 30;
     // updating to the latest tick that we want.
     this.updateToTick(toTick);
     //this.garbageCollect(toTick - 300);
     // smoothing things out, giving a speculative tick so objects move smoothly:
     return this.states.at(-1).speculativePartialTick(deltaTime);
   }
-
 }

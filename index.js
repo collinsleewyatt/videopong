@@ -1,3 +1,27 @@
+"use strict";
+let protocol = {
+  tickrate: 30,
+  timeoutAfterMs: 1000,
+  stateSaveAfterEveryMs: 50,
+  ignoreUpdatesForTicksAfterEvery: 800,
+  roles: {
+    starship: {
+      inputs: {
+        changeAcceleration: {
+          x: "number",
+          y: "number",
+        },
+        changeTarget: {
+          x: "number",
+          y: "number",
+        },
+        chargeLaser: {},
+        shootLaser: {},
+      },
+    },
+  },
+};
+
 import { v4 } from "uuid";
 import { WebSocketServer } from "ws";
 const server = new WebSocketServer({ port: 7080 });
@@ -26,43 +50,41 @@ server.on("connection", (ws) => {
     addOutput({ type: "start", data: Date.now() });
     connections.forEach((client, index) => {
       addOutput({
-        type: "input",
-        data: {
-          data: {
-            uuid: client.uuid,
-            location: {
-              x: 100,
-              y: 100,
-            },
-          },
-          index: outputs.length,
-          onTick: 1,
-          type: "addCharacter",
-        },
+        type: "addrole",
+        role: "starship",
+        uuid: ws.uuid,
       });
     });
-  }else {
+  } else {
     addOutput({
-      type: "input",
-      data: {
-        data: {
-          uuid: ws.uuid,
-          location: {
-            x: 100,
-            y: 100,
-          },
-        },
-        index: outputs.length,
-        onTick: 1,
-        type: "addCharacter",
-      },
+      type: "addrole",
+      role: "starship",
+      uuid: ws.uuid,
     });
   }
-
   ws.on("message", function message(data) {
     data = JSON.parse(data);
+    // a bunch of validation functions;
+    if(data.data == undefined || data.type == undefined) {
+      return;
+    }
+    if(data.type != protocol.roles.starship.inputs) {
+      return;
+    }
+    if(!(typeof data.data == "object" && data.data != null)) {
+      return;
+    }
+    for(let key in data.data) {
+      if(protocol.roles.starship.inputs['key'] == undefined) {
+        return;
+      }
+      if(typeof data.data[key] != protocol.roles.starship.inputs[key]) {
+        return;
+      }
+    }
     addOutput(data);
   });
+
   ws.on("close", function () {
     console.log("closed");
     connections.splice(connections.indexOf(ws), 1);

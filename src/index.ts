@@ -80,7 +80,7 @@ let gameStart = () => {
     switch (keyPress.key) {
       case "p":
         addInput({
-          data: { uuid: uniqueId(), location: { x: 0, y: 0 } },
+          data: { uuid: uniqueId() },
           index: manager.inputs.length,
           onTick: manager.states.at(-1).currentTick,
           type: "addCharacter",
@@ -170,7 +170,7 @@ let gameStart = () => {
     let factor = 4;
     let nx = Math.floor(mouseEvent.x / factor) * factor;
     let ny = Math.floor(mouseEvent.y / factor) * factor;
-    let { x, y } = previousMouseMoveEvent;
+    let { x, y } = previousMouseMoveEvent != undefined ? previousMouseMoveEvent : {x: -1, y: -1}; //default values
     if (x == nx && y == ny) {
       return;
     } else {

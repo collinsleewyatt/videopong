@@ -1,6 +1,6 @@
 import { cloneDeep } from "lodash";
 import GameState from "../../GameManagement/GameState";
-import { Input } from "../../GameManagement/StateManager";
+import { Input } from "../../GameManagement/Input";
 import Ball from "../GameObjects/Ball";
 import Laser from "../GameObjects/Laser";
 import MovingObject from "../GameObjects/MovingObject";
@@ -12,7 +12,9 @@ export class PongState extends GameState {
     objects: MovingObject[] = [];
     currentTick: number;
     stoppedUntilTick: number = 0;
-  
+    public teamBlueScore: number = 0;
+    public teamRedScore: number = 0;
+
     constructor(currentTick) {
       super();
       this.objects[0] = new Ball();
@@ -21,39 +23,21 @@ export class PongState extends GameState {
   
     addInputs(inputs: Input[]) {
       for (let input of inputs) {
-        if (input.type == "addCharacter") {
-          let data = input.data;
+        if (input.type == "addRole") {
           this.objects.push(
-            new Starship(data.uuid, data.location.x, data.location.y)
+            new Starship(input.uuid, 100, 100)
           );
         }
-        if (input.type == "changeDirection") {
-          let data = input.data;
-          let obj = this.objects.find((obj) => {
+        let data = input.data;
+        if (input.type == "changeAcceleration") {
+          let obj: MovingObject = this.objects.find((obj) => {
             return obj.uuid == data.uuid;
           });
           if(obj == undefined) {
             throw new Error("no object with uuid " + data.uuid);
           }
-          if (data.type == "on") {
-            if (data.x == "+") {
-              obj.accX = 2;
-            } else if (data.x == "-") {
-              obj.accX = -2;
-            }
-            if (data.y == "+") {
-              obj.accY = 2;
-            } else if (data.y == "-") {
-              obj.accY = -2;
-            }
-          } else if (data.type == "off") {
-            if (data.x) {
-              obj.accX = 0;
-            }
-            if (data.y) {
-              obj.accY = 0;
-            }
-          }
+          obj.accX = 2*Math.sign(input.data.x);
+          obj.accY = 2*Math.sign(input.data.y);
         }
   
         if (input.type == "changeTarget") {
@@ -65,7 +49,7 @@ export class PongState extends GameState {
             throw new Error("no object with uuid " + data.uuid);
           }
           if(obj instanceof Starship) {
-            obj.target = input.data.location;
+            obj.target = input.data;
           }
         }
   
@@ -99,7 +83,7 @@ export class PongState extends GameState {
             if(intensity > maxHold) {
               intensity = maxHold;
             }
-            this.objects.push(new Laser(obj.x, obj.y, data.angle, intensity / maxHold));
+            this.objects.push(new Laser(obj.x, obj.y, obj.angle, intensity / maxHold));
           }
         }
   

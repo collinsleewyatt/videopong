@@ -1,4 +1,4 @@
-import { Input } from "./StateManager";
+import { Input } from "./Input";
 
 export default abstract class GameState {
   abstract render(ctx: CanvasRenderingContext2D): void;
