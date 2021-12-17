@@ -45,8 +45,10 @@ export default class GameManager {
     }
   }
   private garbageCollect(beforeTick: number) {
-    while (this.states[0].currentTick < beforeTick) {
-      this.states.shift();
+    return;
+    while (this.states[0].currentTick < beforeTick && this.states.length > 2) {
+      //don't ever delete the first state!!!
+      this.states.splice(1, 1);
     }
   }
   private rollback(baseTick: number, endingTick: number) {
@@ -82,6 +84,7 @@ export default class GameManager {
    * @param input, the complete input to add.
    */
   public addInput(input: Input) {
+    console.log(input);
     // this if statement prevents rolling back if the input array wouldn't be changed by
     // this new input, eg. if the inputs are the same.
     // this scenario is possible: whenever the client sends an input to the server, it stores
@@ -125,7 +128,7 @@ export default class GameManager {
     let deltaTime = timestamp - toTick * 30;
     // updating to the latest tick that we want.
     this.updateToTick(toTick);
-    //this.garbageCollect(toTick - 300);
+    this.garbageCollect(toTick - 300);
     // smoothing things out, giving a speculative tick so objects move smoothly:
     return this.states.at(-1).speculativePartialTick(deltaTime);
   }

@@ -1,3 +1,4 @@
+import { reduce } from "lodash";
 import Laser from "./Laser";
 import MovingObject from "./MovingObject";
 interface coordinatePair {
@@ -6,8 +7,8 @@ interface coordinatePair {
 }
 
 export default class Ball extends MovingObject {
-    x = 100;
-    y = 100;
+    x = 400;
+    y = 300;
     size = 20;
     angle = 0;
     geometry: coordinatePair[] = [{x: 0, y: 0}];
@@ -19,6 +20,26 @@ export default class Ball extends MovingObject {
         this.velX += 10
         this.velY += 10
     }
+
+    getWinner():string {
+        let str = ""
+        if(this.x < 0) {
+            str = "blue"
+        } else if(this.x > 800) {
+            str = "red"
+        }
+        if(this.x < 0 || this.x > 800) {
+            this.x = 400;
+            this.y = 300;
+            this.accX = 0;
+            this.accY = 0;
+            this.velX = 0;
+            this.velY = 0;
+        }
+
+        return str;
+    }
+
     update(): void {
         if(this.frozenFor > 0) {
             this.frozenFor -= 1;
@@ -26,11 +47,11 @@ export default class Ball extends MovingObject {
         }
         // dvd-logo bounce effect
         if(this.x < (0 + this.size) && this.velX < 0) {
-            this.velX = -this.velX
+            //this.velX = -this.velX
         }
         //         canvas size
         if(this.x > (800 - this.size) && this.velX > 0) {
-            this.velX = -this.velX
+            //this.velX = -this.velX
         }
         if(this.y < (0 + this.size) && this.velY < 0) {
             this.velY = -this.velY

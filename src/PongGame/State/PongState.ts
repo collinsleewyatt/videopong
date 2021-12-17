@@ -23,58 +23,46 @@ export class PongState extends GameState {
   
     addInputs(inputs: Input[]) {
       for (let input of inputs) {
-        if (input.type == "addRole") {
+        if (input.type == "addrole") {
           this.objects.push(
             new Starship(input.uuid, 100, 100)
           );
+          return;
+        }
+        if (input.type == "removerole") {
+          let indexToRemove = this.objects.findIndex((obj) => {
+            return obj.uuid == input.uuid;
+          });;
+          if(indexToRemove == -1) {
+            console.error(input);
+            console.error("no object with uuid " + input.uuid);
+          }
+          this.objects.splice(indexToRemove, 1);
+          return;
         }
         let data = input.data;
+        let obj = this.objects.find((obj) => {
+          return obj.uuid == input.uuid;
+        });
+        if(obj == undefined) {
+          console.error(input);
+          console.error("no object with uuid " + input.uuid);
+        }
+
+
         if (input.type == "changeAcceleration") {
-          let obj: MovingObject = this.objects.find((obj) => {
-            return obj.uuid == data.uuid;
-          });
-          if(obj == undefined) {
-            throw new Error("no object with uuid " + data.uuid);
-          }
-          obj.accX = 2*Math.sign(input.data.x);
-          obj.accY = 2*Math.sign(input.data.y);
-        }
-  
-        if (input.type == "changeTarget") {
-          let data = input.data;
-          let obj = this.objects.find((obj) => {
-            return obj.uuid == data.uuid;
-          });
-          if(obj == undefined) {
-            throw new Error("no object with uuid " + data.uuid);
-          }
+          obj.accX = 2*Math.sign(data.x);
+          obj.accY = 2*Math.sign(data.y);
+        }else if (input.type == "changeTarget") {
           if(obj instanceof Starship) {
-            obj.target = input.data;
+            obj.target = data;
           }
-        }
-  
-        if (input.type == "chargeProjectile") {
-          let data = input.data;
-          let obj = this.objects.find((obj) => {
-            return obj.uuid == data.uuid;
-          });
-          if(obj == undefined) {
-            throw new Error("no object with uuid " + data.uuid);
-          }
+        } else if (input.type == "chargeLaser") {
           if(obj instanceof Starship) {
             obj.strokeStyle = "red";
             obj.chargeTick = this.currentTick;
           }
-        }
-  
-        if (input.type == "shootProjectile") {
-          let data = input.data;
-          let obj = this.objects.find((obj) => {
-            return obj.uuid == data.uuid;
-          });
-          if(obj == undefined) {
-            throw new Error("no object with uuid " + data.uuid);
-          }
+        } else if (input.type == "shootLaser") {
           if(obj instanceof Starship) {
             obj.strokeStyle = "white"
             obj.fillStyle = "white"
@@ -100,10 +88,19 @@ export class PongState extends GameState {
         let object = this.objects[i];
         object.currentTick = this.currentTick;
         object.move(movePerMs);
+        if(object instanceof Ball) {
+          let winner = object.getWinner();
+          if(winner == "blue") {
+            this.teamBlueScore += 1;
+          }else if(winner == "red") {
+            this.teamRedScore += 1;
+          }
+        }
         object.update();
         if (object.shouldBeRemoved()) {
           this.objects.splice(this.objects.indexOf(object), 1);
         }
+
         for(let j = i + 1; j < this.objects.length; j++) {
           let otherObject = this.objects[j];
           if(object.collision(otherObject)) {

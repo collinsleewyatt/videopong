@@ -24,9 +24,11 @@ let protocol = {
 
 import { v4 } from "uuid";
 import { WebSocketServer } from "ws";
-const server = new WebSocketServer({ port: 7080 });
+const server = new WebSocketServer({ noServer: true});
 let connections = [];
 let outputs = [];
+
+let startTime = -1;
 
 function addOutput(data) {
   outputs.push(data);
@@ -47,12 +49,16 @@ server.on("connection", (ws) => {
   catchUpClient(ws);
   // start the game:
   if (connections.length == 1) {
-    addOutput({ type: "start", data: Date.now() });
+    if(startTime == -1) {
+      startTime = Date.now();
+    }
+      addOutput({ type: "start", data: Date.now() });
     connections.forEach((client, index) => {
       addOutput({
         type: "addrole",
         role: "starship",
         uuid: ws.uuid,
+        onTick: Math.floor((Date.now() - startTime) / 30) + 1
       });
     });
   } else {
@@ -60,29 +66,44 @@ server.on("connection", (ws) => {
       type: "addrole",
       role: "starship",
       uuid: ws.uuid,
+      onTick: Math.floor((Date.now() - startTime) / 30) + 1
     });
   }
   ws.on("message", function message(data) {
     data = JSON.parse(data);
     // a bunch of validation functions;
-    if(data.data == undefined || data.type == undefined) {
+    if (data.data == undefined || data.type == undefined || typeof data.type != "string") {
+      console.log("1", data)
       return;
     }
-    if(data.type != protocol.roles.starship.inputs) {
+    if (protocol.roles.starship.inputs[data.type] == undefined) {
+      console.log('2')
       return;
     }
-    if(!(typeof data.data == "object" && data.data != null)) {
+    if (!(typeof data.data == "object" && data.data != null)) {
+      console.log(3)
       return;
     }
-    for(let key in data.data) {
-      if(protocol.roles.starship.inputs['key'] == undefined) {
+    for (let key in data.data) {
+      /*if(protocol.roles.starship.inputs[key] == undefined) {
+        console.log(4)
         return;
-      }
+      }*//*
       if(typeof data.data[key] != protocol.roles.starship.inputs[key]) {
+        console.log(5)
         return;
-      }
+      }*/
     }
-    addOutput(data);
+    addOutput({
+      type: "input",
+      data: {
+        data: data.data,
+        index: outputs.length,
+        onTick: data.onTick,
+        type: data.type,
+        uuid: ws.uuid
+      }
+    });
   });
 
   ws.on("close", function () {
@@ -90,6 +111,15 @@ server.on("connection", (ws) => {
     connections.splice(connections.indexOf(ws), 1);
     if (connections.length == 0) {
       outputs = [];
+    }
+    addOutput({
+      type: "removerole",
+      role: "starship",
+      uuid: ws.uuid,
+      onTick: Math.floor((Date.now() - startTime) / 30)
+    });
+    if(connections.length == 0) {
+      startTime = -1;
     }
   });
 });
@@ -110,3 +140,4 @@ function sendData(data, ws) {
 setInterval(() => {
   broadcastData({ type: "currentTimestamp", data: Date.now() });
 }, 500);
+export default server;

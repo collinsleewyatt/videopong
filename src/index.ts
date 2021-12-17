@@ -1,18 +1,16 @@
-import { uniqueId } from "lodash";
-import GameManager from "./GameManagement/StateManager";
-import {
-  clearListeners,
-  registerKeyPressEventListener,
-  registerMouseMoveEventListener,
-} from "./GameManagement/InputEventDriver";
-import Time from "./Time";
-import { PongState } from "./PongGame/State/PongState";
+import PongGame from "./PongGame/PongGame";
 
 require("./main.css");
+let game: HTMLCanvasElement = document.getElementById(
+  "game"
+) as HTMLCanvasElement;
+let ctx: CanvasRenderingContext2D = game.getContext("2d");
+
+new PongGame("ws://" + window.location.hostname, ctx);
 
 
-let startingTime = -1;
-let currentTime = 0;
+
+/*
 
 let connection = new WebSocket("ws://localhost:7080")
 let gameRun = false;
@@ -193,3 +191,4 @@ function gameDie() {
   clearListeners();
   console.log("die")
 }
+*/

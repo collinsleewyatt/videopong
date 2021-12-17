@@ -1,0 +1,4 @@
+node host.js and
+ngrok http 8080
+
+do both in seperate shells, no cheating
