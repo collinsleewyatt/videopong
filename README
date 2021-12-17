@@ -1,4 +1,19 @@
-node host.js and
-ngrok http 8080
+VideoPong Honors Project!!
+Collins Wyatt, Fall 2021.
 
-do both in seperate shells, no cheating
+src/ contains all of the source for the browser implementation.
+it is badly documented.
+src/GameManagement - a bunch of general classes, some abstract, that are used for rolling back and input collection.
+src/PongGame - specific to the pong game itself
+src/index.ts - the main js file, which calls src/PongGame/PongGame.ts - the main file for the pong game
+
+src/PongGame/protocol.ts is unused, but a copy of it is in index.js (couldn't get imports to work)
+
+./index.js and ./host.js contains all of the source for the proper way.
+
+
+first time: run npm install.
+
+npx webpack build - build the code and it will send it into dist/.
+npm run dev - development server.
+node host.js to run on port 8080.

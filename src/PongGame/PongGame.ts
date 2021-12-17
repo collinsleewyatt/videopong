@@ -19,6 +19,7 @@ export default class PongGame {
   private ctx: CanvasRenderingContext2D;
   private time: Time;
   private uuid: string;
+  
   constructor(url, ctx: CanvasRenderingContext2D) {
     this.stateManager = new StateManager(new PongState(0));
     this.ctx = ctx;

@@ -30,6 +30,8 @@ export default class GameManager {
       let newState;
       // if the tick is not divisible by ten, assign by reference, otherwise, copy.
       // prevents too much cloning.
+      // This prevents the computer from blowing up, because now we copy objects every 10 frames,
+      // and not every frame.
       if (this.states.at(-1).currentTick % 10 != 0) {
         newState = this.states.at(-1);
         // get rid of it, then we'll update it and put it back on.
