@@ -8,9 +8,8 @@
     # Content Type
     contentType: # optional
     # Request Body as JSON String
-    data: ${{ SECRETS.UPDATE }}
+    data: '${{ SECRETS.UPDATE }}'
 on:
   push:
     branches:
       - main
-      
