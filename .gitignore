@@ -1,2 +1,4 @@
 node_modules/
 dist/
+.update_key
+package-lock.json

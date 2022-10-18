@@ -6,7 +6,7 @@ let game: HTMLCanvasElement = document.getElementById(
 ) as HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D = game.getContext("2d");
 
-new PongGame("ws://" + window.location.hostname, ctx);
+new PongGame("wss://" + window.location.hostname, ctx);
 
 
 

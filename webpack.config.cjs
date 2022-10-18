@@ -6,7 +6,7 @@ module.exports = {
 	entry: "./src/index.ts",
 	devtool: "inline-source-map",
 	mode: "production",
-	watch: true,
+	watch: false,
 	devServer: {
 		static: {
 			directory: 'static',
