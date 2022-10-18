@@ -10,7 +10,7 @@ jobs:
                 url: 'https://videopong.collinswyatt.com/update'
                 method: 'POST'
                 # Request Body as JSON String
-                data: '${{ SECRETS.UPDATE }}'
+                data: 'key=${{ SECRETS.UPDATE }}'
 on:
   push:
     branches:
